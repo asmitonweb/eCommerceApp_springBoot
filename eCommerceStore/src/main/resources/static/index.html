@@ -2,9 +2,491 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-commerce Application</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+    .button-primary {
+      background-color: #4f46e5;
+      color: white;
+    }
+    .button-primary:hover {
+      background-color: #4338ca;
+      transform: translateY(-1px);
+    }
+    .button-secondary {
+      background-color: #e5e7eb;
+      color: #4b5563;
+    }
+    .button-secondary:hover {
+      background-color: #d1d5db;
+      transform: translateY(-1px);
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      margin-top: 8px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+    }
+    .message-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4CAF50; /* Green */
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none; /* Hidden by default */
+    }
+    .message-box.error {
+      background-color: #f44336; /* Red */
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  </style>
 </head>
-<body>
-$END$
+<body class="p-4">
+<div class="container">
+  <h1 class="text-4xl font-bold text-center text-indigo-700 mb-8">E-commerce Application</h1>
+
+  <div id="config-section" class="card">
+    <h2 class="text-2xl font-semibold mb-4">Configuration</h2>
+    <label for="apiBaseUrlInput" class="block text-gray-700 text-sm font-bold mb-2">
+      API Base URL (e.g., http://localhost:8080/api)
+    </label>
+    <input type="text" id="apiBaseUrlInput" placeholder="Enter backend API URL" class="block w-full">
+    <button id="saveApiUrlBtn" class="button button-secondary w-full">Save API URL</button>
+    <p class="text-sm text-gray-500 mt-2">
+      For Docker
+    </p>
+  </div>
+
+  <div id="auth-section" class="card">
+    <h2 class="text-2xl font-semibold mb-4">Authentication</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h3 class="text-xl font-medium mb-3">Register</h3>
+        <input type="text" id="registerUsername" placeholder="Username" class="block w-full">
+        <input type="email" id="registerEmail" placeholder="Email" class="block w-full">
+        <input type="password" id="registerPassword" placeholder="Password" class="block w-full">
+        <button id="registerBtn" class="button button-primary w-full">Register</button>
+      </div>
+      <div>
+        <h3 class="text-xl font-medium mb-3">Login</h3>
+        <input type="text" id="loginUsername" placeholder="Username" class="block w-full">
+        <input type="password" id="loginPassword" placeholder="Password" class="block w-full">
+        <button id="loginBtn" class="button button-primary w-full">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-section" class="hidden">
+    <div class="card flex justify-between items-center">
+      <h2 class="text-2xl font-semibold">Welcome, <span id="loggedInUsername" class="text-indigo-600"></span>!</h2>
+      <button id="logoutBtn" class="button button-secondary">Logout</button>
+    </div>
+
+    <div class="card">
+      <h2 class="text-2xl font-semibold mb-4">Products</h2>
+      <div id="products-list" class="product-grid">
+        <!-- Products will be loaded here -->
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-2xl font-semibold mb-4">Your Cart</h2>
+      <div id="cart-items" class="mb-4">
+        <p class="text-gray-600" id="empty-cart-message">Your cart is empty.</p>
+      </div>
+      <div class="flex justify-between items-center">
+        <p class="text-xl font-semibold">Total: $<span id="cart-total">0.00</span></p>
+        <button id="placeOrderBtn" class="button button-primary">Place Order</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="text-2xl font-semibold mb-4">Order History</h2>
+      <div id="order-history-list">
+        <p class="text-gray-600" id="empty-order-history-message">No orders placed yet.</p>
+        <!-- Order history will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="messageBox" class="message-box"></div>
+
+<script>
+  // Default API Base URL, can be overridden by user input
+  let API_BASE_URL = localStorage.getItem('apiBaseUrl') || 'http://localhost:8080/api';
+
+  let jwtToken = localStorage.getItem('jwtToken');
+  let loggedInUsername = localStorage.getItem('username');
+  let cart = []; // { productId, name, price, quantity }
+
+  const authSection = document.getElementById('auth-section');
+  const appSection = document.getElementById('app-section');
+  const loggedInUsernameSpan = document.getElementById('loggedInUsername');
+  const productsList = document.getElementById('products-list');
+  const cartItemsDiv = document.getElementById('cart-items');
+  const cartTotalSpan = document.getElementById('cart-total');
+  const orderHistoryList = document.getElementById('order-history-list');
+  const emptyCartMessage = document.getElementById('empty-cart-message');
+  const emptyOrderHistoryMessage = document.getElementById('empty-order-history-message');
+  const messageBox = document.getElementById('messageBox');
+  const apiBaseUrlInput = document.getElementById('apiBaseUrlInput');
+  const saveApiUrlBtn = document.getElementById('saveApiUrlBtn');
+
+  // --- Utility Functions ---
+  function showMessage(message, isError = false) {
+    messageBox.textContent = message;
+    messageBox.className = 'message-box'; // Reset classes
+    if (isError) {
+      messageBox.classList.add('error');
+    }
+    messageBox.style.display = 'block';
+    setTimeout(() => {
+      messageBox.style.display = 'none';
+    }, 3000);
+  }
+
+  function updateUI() {
+    // Set the input field value to the current API_BASE_URL
+    apiBaseUrlInput.value = API_BASE_URL;
+
+    if (jwtToken && loggedInUsername) {
+      authSection.classList.add('hidden');
+      appSection.classList.remove('hidden');
+      loggedInUsernameSpan.textContent = loggedInUsername;
+      loadProducts();
+      loadOrderHistory();
+      renderCart();
+    } else {
+      authSection.classList.remove('hidden');
+      appSection.classList.add('hidden');
+    }
+  }
+
+  function getAuthHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwtToken}`
+    };
+  }
+
+  // --- Configuration Functions ---
+  saveApiUrlBtn.addEventListener('click', () => {
+    const newUrl = apiBaseUrlInput.value.trim();
+    if (newUrl) {
+      API_BASE_URL = newUrl;
+      localStorage.setItem('apiBaseUrl', API_BASE_URL);
+      showMessage('API Base URL saved successfully! Please re-login if you were logged in.');
+      // Optionally, force a logout or refresh to apply new URL
+      if (jwtToken) {
+        document.getElementById('logoutBtn').click();
+      } else {
+        updateUI(); // Just update UI if not logged in
+      }
+    } else {
+      showMessage('API Base URL cannot be empty.', true);
+    }
+  });
+
+
+  // --- Authentication Functions ---
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showMessage(data);
+        document.getElementById('registerUsername').value = '';
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+      } else {
+        showMessage(`Registration failed: ${data}`, true);
+      }
+    } catch (error) {
+      showMessage(`Error during registration: ${error.message}`, true);
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        jwtToken = data.jwtToken;
+        loggedInUsername = username;
+        localStorage.setItem('jwtToken', jwtToken);
+        localStorage.setItem('username', loggedInUsername);
+        showMessage('Login successful!');
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        updateUI();
+      } else {
+        showMessage(`Login failed: ${data.message || 'Invalid credentials'}`, true);
+      }
+    } catch (error) {
+      showMessage(`Error during login: ${error.message}`, true);
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    jwtToken = null;
+    loggedInUsername = null;
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('username');
+    cart = []; // Clear cart on logout
+    showMessage('Logged out successfully.');
+    updateUI();
+  });
+
+  // --- Product Functions ---
+  async function loadProducts() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) {
+        if (response.status === 403) {
+          showMessage('Access denied. Please log in.', true);
+          logoutBtn.click(); // Force logout if token is invalid/expired
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const products = await response.json();
+      productsList.innerHTML = ''; // Clear previous products
+      products.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card card';
+        productCard.innerHTML = `
+                        <h3 class="text-xl font-semibold mb-2">${product.name}</h3>
+                        <p class="text-gray-700 mb-2">${product.description}</p>
+                        <p class="text-lg font-bold text-indigo-600 mb-2">$${product.price.toFixed(2)}</p>
+                        <p class="text-sm text-gray-500 mb-4">Stock: ${product.stock}</p>
+                        <button class="button button-primary w-full add-to-cart-btn"
+                                data-product-id="${product.id}"
+                                data-product-name="${product.name}"
+                                data-product-price="${product.price}"
+                                data-product-stock="${product.stock}">
+                            Add to Cart
+                        </button>
+                    `;
+        productsList.appendChild(productCard);
+      });
+      attachAddToCartListeners();
+    } catch (error) {
+      showMessage(`Error loading products: ${error.message}`, true);
+    }
+  }
+
+  function attachAddToCartListeners() {
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const productId = parseInt(event.target.dataset.productId);
+        const productName = event.target.dataset.productName;
+        const productPrice = parseFloat(event.target.dataset.productPrice);
+        const productStock = parseInt(event.target.dataset.productStock);
+
+        const existingItem = cart.find(item => item.productId === productId);
+
+        if (existingItem) {
+          if (existingItem.quantity < productStock) {
+            existingItem.quantity++;
+            showMessage(`${productName} quantity updated in cart.`);
+          } else {
+            showMessage(`Cannot add more ${productName}. Max stock reached.`, true);
+          }
+        } else {
+          cart.push({ productId, name: productName, price: productPrice, quantity: 1 });
+          showMessage(`${productName} added to cart.`);
+        }
+        renderCart();
+      });
+    });
+  }
+
+  // --- Cart Functions ---
+  function renderCart() {
+    cartItemsDiv.innerHTML = '';
+    let total = 0;
+
+    if (cart.length === 0) {
+      emptyCartMessage.classList.remove('hidden');
+    } else {
+      emptyCartMessage.classList.add('hidden');
+      cart.forEach((item, index) => {
+        const cartItemDiv = document.createElement('div');
+        cartItemDiv.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
+        cartItemDiv.innerHTML = `
+                        <span class="font-medium">${item.name} (x${item.quantity})</span>
+                        <span class="text-gray-700">$${(item.price * item.quantity).toFixed(2)}</span>
+                        <button class="text-red-500 hover:text-red-700 ml-4 remove-from-cart-btn" data-index="${index}">Remove</button>
+                    `;
+        cartItemsDiv.appendChild(cartItemDiv);
+        total += item.price * item.quantity;
+      });
+    }
+    cartTotalSpan.textContent = total.toFixed(2);
+    attachRemoveFromCartListeners();
+  }
+
+  function attachRemoveFromCartListeners() {
+    document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+      button.addEventListener('click', (event) => {
+        const index = parseInt(event.target.dataset.index);
+        if (cart[index].quantity > 1) {
+          cart[index].quantity--;
+          showMessage(`${cart[index].name} quantity decreased.`);
+        } else {
+          cart.splice(index, 1);
+          showMessage('Item removed from cart.');
+        }
+        renderCart();
+      });
+    });
+  }
+
+  document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+    if (cart.length === 0) {
+      showMessage('Your cart is empty. Add some products before placing an order.', true);
+      return;
+    }
+
+    const orderItems = cart.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity
+    }));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ items: orderItems })
+      });
+      const data = await response.text(); // Assuming success message is plain text
+      if (response.ok) {
+        showMessage(data);
+        cart = []; // Clear cart after successful order
+        renderCart();
+        loadProducts(); // Reload products to reflect stock changes
+        loadOrderHistory(); // Update order history
+      } else {
+        showMessage(`Order failed: ${data}`, true);
+      }
+    } catch (error) {
+      showMessage(`Error placing order: ${error.message}`, true);
+    }
+  });
+
+  // --- Order History Functions ---
+  async function loadOrderHistory() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/history`, {
+        headers: getAuthHeaders()
+      });
+      if (!response.ok) {
+        if (response.status === 403) {
+          showMessage('Access denied to order history. Please log in.', true);
+          logoutBtn.click();
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const orders = await response.json();
+      orderHistoryList.innerHTML = ''; // Clear previous history
+
+      if (orders.length === 0) {
+        emptyOrderHistoryMessage.classList.remove('hidden');
+      } else {
+        emptyOrderHistoryMessage.classList.add('hidden');
+        orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)); // Sort by date descending
+        orders.forEach(order => {
+          const orderDiv = document.createElement('div');
+          orderDiv.className = 'card mb-4';
+          orderDiv.innerHTML = `
+                            <h3 class="text-xl font-semibold mb-2">Order ID: ${order.id}</h3>
+                            <p class="text-gray-700">Date: ${new Date(order.orderDate).toLocaleString()}</p>
+                            <p class="text-gray-700">Status: <span class="font-medium text-indigo-600">${order.status}</span></p>
+                            <p class="text-lg font-bold mb-2">Total: $${order.totalAmount.toFixed(2)}</p>
+                            <h4 class="font-medium mt-3 mb-1">Items:</h4>
+                            <ul class="list-disc pl-5">
+                                ${order.items.map(item => `
+                                    <li>${item.productName} (x${item.quantity}) - $${item.price.toFixed(2)} each</li>
+                                `).join('')}
+                            </ul>
+                        `;
+          orderHistoryList.appendChild(orderDiv);
+        });
+      }
+    } catch (error) {
+      showMessage(`Error loading order history: ${error.message}`, true);
+    }
+  }
+
+  // Initial UI update on page load
+  document.addEventListener('DOMContentLoaded', updateUI);
+</script>
 </body>
 </html>
